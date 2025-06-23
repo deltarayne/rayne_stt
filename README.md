@@ -8,7 +8,7 @@
 
 use the main website for torch:
 
-[pytorch] pytorch.org
+[pytorch] https://pytorch.org
 
 installing pytorch for the correct CUDA version will insure the GPU is available to the whisper model. This isn't required but the program will operate considerably slower without the GPU. 
 
