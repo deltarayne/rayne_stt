@@ -1,3 +1,15 @@
+
+## rayne_stt
+
+I created this for a friend who has difficulty typing. I've posted it in here in case it might
+be useful as an accessibility or convenience tool for anyone else. Some of the code to perform specific functions such as entering the text using pyautogui, was written by Gemini and the overall program stitching everything together was written manually.\ 
+
+The model used for the speech recognition by default is [whisper-large-v3-turbo] (https://huggingface.co/openai/whisper-large-v3-turbo)
+
+The model could easily be change to another one in the [transformers] (https://huggingface.co/docs/transformers/en/index) family simply by changing the text in this line to match whatever model you want to use:\
+
+`model_id = "openai/whisper-large-v3"'
+
 ## installation
 
 ### install required python modules
@@ -8,7 +20,7 @@
 
 use the main website for torch:
 
-[pytorch] https://pytorch.org
+[pytorch] (https://pytorch.org)
 
 installing pytorch for the correct CUDA version will insure the GPU is available to the whisper model. This isn't required but the program will operate considerably slower without the GPU. 
 
@@ -30,4 +42,4 @@ if this returns as `True` then torch is set up properly to use CUDA.
 
 if it returns false, consult a guide on installing torch for the right CUDA version. There are many and I've included the following link to one of them for your convenience: 
 
-[how to set up and run cuda operations in pytorch] https://www.geeksforgeeks.org/machine-learning/how-to-set-up-and-run-cuda-operations-in-pytorch/
+[how to set up and run cuda operations in pytorch] (https://www.geeksforgeeks.org/machine-learning/how-to-set-up-and-run-cuda-operations-in-pytorch/)
