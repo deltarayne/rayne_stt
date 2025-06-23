@@ -17,13 +17,13 @@ to select a version compatible with your OS/CUDA version, use the widget on the 
 
 to test if torch is installed such that it can access your CUDA installation:
 
-1. Open up the python repl on your command line
+1. Open up the python repl on your command line\
 `python`
 
-2. import pytorch
+2. import pytorch\
 `import torch`
 
-3. enter this line to check that torch can access your CUDA installation
+3. enter this line to check that torch can access your CUDA installation\
 `torch.cuda.is_available()`
 
 if this returns as `True` then torch is set up properly to use CUDA. 
