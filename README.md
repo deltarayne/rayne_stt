@@ -35,7 +35,7 @@ use the website for torch:
 
 installing pytorch for the correct CUDA version will insure the GPU is available to the whisper model. This isn't required but the program will operate considerably slower without the GPU. 
 
-to select a version compatible with your OS/CUDA version, use the widget on the torch website to get the proper pip3 command and paste the output into your commandline
+to select a version compatible with your OS/CUDA version, use the widget on the torch website to get the proper pip3 command and paste the output into your command line.
 *torch for CUDA 12.8 is compatible with all versions 12.x higher than 8* 
 
 to test if torch is installed such that it can access your CUDA installation:
