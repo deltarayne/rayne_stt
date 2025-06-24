@@ -1,14 +1,13 @@
 
 ## rayne_stt
 
-I created this for a friend who has difficulty typing. I've posted it in here in case it might
-be useful as an accessibility or convenience tool for anyone else. Some of the code to perform specific functions such as entering the text using pyautogui, was written by Gemini and the overall program stitching everything together was written manually.\ 
+I created this for a friend who has some difficulty with typing out large amounts of text. I've posted it in here in case it might be useful as an accessibility or convenience tool for anyone else. Some of the code to perform specific functions such as entering the text using pyautogui, was written by Gemini and the overall program stitching everything together was written manually. 
 
-The model used for the speech recognition by default is [whisper-large-v3-turbo](https://huggingface.co/openai/whisper-large-v3-turbo).
+The model used for the speech recognition by default is [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3). In my own experience and that of the few friends I've managed to test it with, this model provides incredibly accurate speech recognition output in a fairly short amount of time. (It runs almost in realtime on my computer and I'm using an Nvidia GeForce 2070 Super). If you find the program takes too long to process speech into text, you might try using the turbo model: [whisper-large-v3-turbo](https://huggingface.co/openai/whisper-large-v3-turbo)
 
-The model could easily be change to another one in the [transformers](https://huggingface.co/docs/transformers/en/index) family simply by changing the text in this line to match whatever model you want to use:\
+The model could easily be change to another one in the [transformers](https://huggingface.co/docs/transformers/en/index) family simply by changing the text in this line to match whatever model you want to use:
 
-`model_id = "openai/whisper-large-v3"'
+`model_id = "openai/whisper-large-v3"`
 
 ## installation
 
