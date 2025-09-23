@@ -8,6 +8,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 import json
+import time 
 
 
 
@@ -24,7 +25,7 @@ audio_input_device = sd.default.device
 # These global variables will manage the recording state across different threads.
 is_recording = False
 audio_data = []
-GUI_DEBUG = False
+GUI_DEBUG = True
 # --- Model and Pipeline Setup ---
 if GUI_DEBUG == False:
     print("Loading the Whisper model. This may take a moment...")
@@ -109,10 +110,19 @@ def transcribe_audio():
     print("Ready to record again. Press Ctrl+Shift+1 to start.")
 
 def insert_text(text):
-    pyautogui.write(text, interval=0.05)  # Adjust the interval as needed for typing speed
+    time.sleep(2)
+    pyautogui.write(text, interval=0.1)  # Adjust the interval as needed for typing speed
     ui.text_field.delete("1.0", tk.END)
     ui.text_field.insert("1.0", text)
-    
+
+def insert_field(target: int):
+    insert_text(ui.preset_panels[target].text)
+
+def input_current():
+    captured_text = ui.text_field.get("1.0", tk.END)
+    print(f"about to insert {captured_text}")
+    insert_text(captured_text)
+
 def start_recording(device_index):
     """
     Callback function for the 'start' hotkey.
@@ -146,13 +156,13 @@ class Preset():
     field = None
     def __init__(self, container, field, number: int):
         self.field = field
-        self.number = number
+        self.number = number + 1
         self.panel = tk.Canvas(container)
-        self.label = tk.Label(self.panel, text = f"Preset:{number}")
+        self.label = tk.Label(self.panel, text = f"Preset:{self.number}")
         self.label.pack(side="left")
-        self.load_button = ttk.Button(self.panel, text=f"load{number}")
+        self.load_button = ttk.Button(self.panel, text=f"load {self.number}")
         self.load_button.pack(side="right")
-        self.save_button = ttk.Button(self.panel, text=f"save{number}")
+        self.save_button = ttk.Button(self.panel, text=f"save {self.number}")
         self.save_button.pack(side="right")
         
         self.load_button.bind("<Button-1>", self.load_preset)
@@ -335,6 +345,12 @@ if __name__ == "__main__":
     # for our start/stop logic without blocking the main script.
     start_key = 'ctrl+shift+1'
     stop_key = 'ctrl+shift+2'
+    insert_current_text = 'ctrl+shift+3'
+    insert1 = 'ctrl+shift+5'
+    insert2 = 'ctrl+shift+6'
+    insert3 = 'ctrl+shift+7'
+    insert4 = 'ctrl+shift+8'
+    insert5 = 'ctrl+shift+9'
 
 
 
@@ -348,6 +364,13 @@ if __name__ == "__main__":
     
     keyboard.add_hotkey(start_key, start_recording, (ui.audio_device,))
     keyboard.add_hotkey(stop_key, stop_recording)
+    keyboard.add_hotkey(insert_current_text, input_current)
+    keyboard.add_hotkey(insert1, insert_field, args=(0,))
+    keyboard.add_hotkey(insert2, insert_field, args=(1,))
+    keyboard.add_hotkey(insert3, insert_field, args=(2,))
+    keyboard.add_hotkey(insert4, insert_field, args=(3,))
+    keyboard.add_hotkey(insert5, insert_field, args=(4,))
+
 
     print(f"Press '{start_key}' to start recording.")
     print("Press 'Esc' to exit the program.")
@@ -357,3 +380,7 @@ if __name__ == "__main__":
     print("\nExiting program. Cleaning up hotkeys...")
     keyboard.remove_all_hotkeys()
     print("Cleanup complete.")
+
+
+
+
