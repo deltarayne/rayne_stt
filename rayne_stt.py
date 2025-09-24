@@ -25,7 +25,7 @@ audio_input_device = sd.default.device
 # These global variables will manage the recording state across different threads.
 is_recording = False
 audio_data = []
-GUI_DEBUG = True
+GUI_DEBUG = False
 # --- Model and Pipeline Setup ---
 if GUI_DEBUG == False:
     print("Loading the Whisper model. This may take a moment...")
@@ -150,6 +150,8 @@ def stop_recording():
     # The transcription can be slow, so run it in a thread to not block the hotkey listener.
     threading.Thread(target=transcribe_audio, daemon=True).start()
 
+def test_print():
+    print("test!")
 
 class Preset():
     text = ""
@@ -176,7 +178,27 @@ class Preset():
         self.text = self.field.get("1.0", tk.END)
         ui.save_presets()
         
+class Keybind():
+    def __init__(self, container, name, key: str):
+        self.combo = key
+        self.frm = tk.Frame(container)
+        self.name = tk.Label(container, text=name)
+        self.name.pack(side="left")
+        self.change_button = ttk.Button(container, text=self.combo, command=self.receive_key)
+        self.change_button.pack(side="right")
     
+    def receive_key(self):
+        keyboard._pressed_events.clear()
+        self.change_button.configure(text="...")
+        popup = tk.Toplevel(ui)
+        popup_text = tk.Label(popup, text="Press desired key combo")
+        popup_text.pack()
+        result = keyboard.read_hotkey(suppress=True)
+        print(f"result is: {result}")
+        popup.destroy()
+        self.combo = result 
+        self.change_button.configure(text=self.combo)
+
 class UI(tk.Tk):
     """
     Main application window for the Tkinter program.
@@ -262,7 +284,17 @@ class UI(tk.Tk):
         type_this.pack(side="right")
         self.text_field.pack(side="right")
         
+        menu_bar = tk.Menu(main_frame)
+        self.config(menu=menu_bar)
         
+        file_list = tk.Menu(menu_bar, tearoff=0)
+        edit_list = tk.Menu(menu_bar, tearoff=0)
+        about_list = tk.Menu(menu_bar, tearoff=0)
+        menu_bar.add_cascade(label="File", menu=file_list)
+        menu_bar.add_cascade(label="Edit", menu=edit_list)
+        menu_bar.add_cascade(label="Help", menu=about_list)
+        file_list.add_command(label="Placeholder", command=test_print)
+        edit_list.add_command(label="Settings", command=self.settings)
             
         #testlabel = tk.Label(my_frame, text="test label")
         #testlabel.pack()
@@ -284,6 +316,14 @@ class UI(tk.Tk):
             scrollregion=canvas1.bbox("all")
             )
         )
+    def settings(self):
+        settings_window = tk.Toplevel(self)
+        settings_window.title("Settings")
+        bind_frame = tk.Frame(settings_window)
+        testbind = Keybind(bind_frame, "testbind", "keycombo")
+        close_button = tk.Button(settings_window, text="Close", command=settings_window.destroy)  
+        bind_frame.pack()
+        close_button.pack(pady="10", side="bottom")
         
     def save_presets(self):
         output = {}
@@ -300,7 +340,8 @@ class UI(tk.Tk):
             print(data)
         for i in range(len(self.preset_panels)):
             self.preset_panels[i].text = data[str(i)]
-            
+          
+        
     def on_selected(self, event):
         print(f"Selected value is: {self.ddmenu.get()}")
         target = self.ddmenu.get()
@@ -362,14 +403,14 @@ if __name__ == "__main__":
     dlist = sd.query_devices()
     ui.populate_device_menu(dlist)
     
-    keyboard.add_hotkey(start_key, start_recording, (ui.audio_device,))
-    keyboard.add_hotkey(stop_key, stop_recording)
-    keyboard.add_hotkey(insert_current_text, input_current)
-    keyboard.add_hotkey(insert1, insert_field, args=(0,))
-    keyboard.add_hotkey(insert2, insert_field, args=(1,))
-    keyboard.add_hotkey(insert3, insert_field, args=(2,))
-    keyboard.add_hotkey(insert4, insert_field, args=(3,))
-    keyboard.add_hotkey(insert5, insert_field, args=(4,))
+    start_hotkey = keyboard.add_hotkey(start_key, start_recording, (ui.audio_device,))
+    stop_hotkey = keyboard.add_hotkey(stop_key, stop_recording)
+    insert_current_hotkey = keyboard.add_hotkey(insert_current_text, input_current)
+    insert1_hotkey = keyboard.add_hotkey(insert1, insert_field, args=(0,))
+    insert2_hotkey = keyboard.add_hotkey(insert2, insert_field, args=(1,))
+    insert3_hotkey = keyboard.add_hotkey(insert3, insert_field, args=(2,))
+    insert4_hotkey = keyboard.add_hotkey(insert4, insert_field, args=(3,))
+    insert5_hotkey = keyboard.add_hotkey(insert5, insert_field, args=(4,))
 
 
     print(f"Press '{start_key}' to start recording.")
