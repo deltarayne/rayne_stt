@@ -47,11 +47,12 @@ if it returns false, consult a guide on installing torch for the right CUDA vers
 
 ## About
 
-This was a quick and dirty project I created for a disabled friend who has some difficulty with typing out large amounts of text. I've posted it in here in case it might be useful as an accessibility or convenience tool for anyone else. Some of the code to perform specific functions such as entering the text using pyautogui, was written by Gemini and the overall program stitching everything together was written manually. 
+This was initially a quick and dirty project I created for a disabled friend who has some difficulty with typing out large amounts of text. I've since spent some time adding a comprehensive UI with tkinter that includes a field to edit the most recent input and user-assignable keybindings and presets that autosave to an external file and autoload on start. I've posted it in here in case it might be useful as an accessibility or convenience tool for anyone else. Some of the code to perform specific functions such as entering the text using pyautogui, was written by Gemini and the overall program stitching everything together was written manually. 
 
 The model used for the speech recognition by default is [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3). In my own experience and that of the few friends I've managed to test it with, this model provides incredibly accurate speech recognition output in a fairly short amount of time. (It runs almost in realtime on my computer and I'm using an Nvidia GeForce 2070 Super). If you find the program takes too long to process speech into text, you might try using the turbo model: [whisper-large-v3-turbo](https://huggingface.co/openai/whisper-large-v3-turbo)
 
 The model could easily be changed to another one in the [transformers](https://huggingface.co/docs/transformers/en/index) family simply by changing the text in this line to match whatever model you want to use:
 
 `model_id = "openai/whisper-large-v3"`
+
 
