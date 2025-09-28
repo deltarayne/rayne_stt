@@ -116,7 +116,7 @@ def insert_text(text):
     ui.text_field.insert("1.0", text)
 
 def insert_field(target: int):
-    insert_text(ui.preset_panels[target].text)
+    insert_text(ui.preset_panels[target].text.rstrip())
 
 def insert_current():
     captured_text = ui.text_field.get("1.0", tk.END)
@@ -186,7 +186,8 @@ class Keybind():
         self.task = task
         self.hotkey = None
         self.change_button = None
-        self.set_new_hotkey(keystrokes)
+        self.combo = None
+        self.set_new_hotkey(keystrokes, True)
         self.name = name
         
     def show(self, container):
@@ -205,7 +206,7 @@ class Keybind():
         hotkey_thread = threading.Thread(target=ui.listen_for_hotkey, args=(self,), daemon=True)
         hotkey_thread.start()
         
-    def set_new_hotkey(self, combo):
+    def set_new_hotkey(self, combo, initial):
         self.combo = combo
         
         if self.hotkey:
@@ -213,6 +214,9 @@ class Keybind():
         self.hotkey = keyboard.add_hotkey(combo, self.task)
         if self.change_button:
             self.change_button.config(state="normal", text=self.combo)
+        if initial == False:
+            ui.save_keybindings_to_file()
+            
 
 
 class UI(tk.Tk):
@@ -223,7 +227,9 @@ class UI(tk.Tk):
     
     key_bindings = {}
     
-    save_file = "presets.json"
+    preset_save_file = "presets.json"
+    bindings_save_file = "bindings.json"
+    
     def __init__(self):
         # Initialize the parent class (tk.Tk)
         super().__init__()
@@ -238,14 +244,43 @@ class UI(tk.Tk):
         # Create and place the widgets in the window.
         self.create_widgets()
         self.load_presets()
-        self.set_initial_keybindings()
+        #self.set_initial_keybindings()
+        self.load_keybindings_from_file()
 
-    def set_initial_keybindings(self):
+    def set_initial_keybindings(self, window):
         self.key_bindings['insert_current'] = Keybind("insert current text", 'ctrl+shift+3', insert_current)
         self.key_bindings['start'] = Keybind("start recording", 'ctrl+shift+1', lambda: start_recording(ui.audio_device))
         self.key_bindings['stop'] = Keybind("stop recording", 'ctrl+shift+2', stop_recording)
-        pass
+        self.key_bindings['insert1'] = Keybind("enter preset 1",'ctrl+shift+5', lambda: insert_field(0))
+        self.key_bindings['insert2'] = Keybind("enter preset 2",'ctrl+shift+6', lambda: insert_field(1))
+        self.key_bindings['insert3'] = Keybind("enter preset 3",'ctrl+shift+7', lambda: insert_field(2))
+        self.key_bindings['insert4'] = Keybind("enter preset 4",'ctrl+shift+8', lambda: insert_field(3))
+        self.key_bindings['insert5'] = Keybind("enter preset 5",'ctrl+shift+9', lambda: insert_field(4))
+        window.destroy()
+        self.save_keybindings_to_file()
+        self.settings()
         
+    
+    def save_keybindings_to_file(self): 
+        output = {}
+        with open(self.bindings_save_file, 'w') as f:
+            for i in self.key_bindings.values():
+                print(f"name:{i.name} combo:{i.combo}")
+                output.update({i.name : i.combo})
+            json.dump(output, f)  
+    
+    def load_keybindings_from_file(self):
+        with open(self.bindings_save_file, 'r') as f:
+            data = json.load(f)
+        self.key_bindings['insert_current'] = Keybind("insert current text", data["insert current text"], insert_current)
+        self.key_bindings['start'] = Keybind("start recording", data["start recording"], lambda: start_recording(ui.audio_device))
+        self.key_bindings['stop'] = Keybind("stop recording", data["stop recording"], stop_recording)
+        self.key_bindings['insert1'] = Keybind("enter preset 1",data["enter preset 1"], lambda: insert_field(0))
+        self.key_bindings['insert2'] = Keybind("enter preset 2",data["enter preset 2"], lambda: insert_field(1))
+        self.key_bindings['insert3'] = Keybind("enter preset 3",data["enter preset 3"], lambda: insert_field(2))
+        self.key_bindings['insert4'] = Keybind("enter preset 4",data["enter preset 4"], lambda: insert_field(3))
+        self.key_bindings['insert5'] = Keybind("enter preset 5",data["enter preset 5"], lambda: insert_field(4))
+               
         
     def listen_for_hotkey(self, binding):
         """(Runs in a separate thread)
@@ -255,7 +290,7 @@ class UI(tk.Tk):
         hotkey_combo = keyboard.read_hotkey(suppress=False)
         
         # Safely schedule the GUI update and hotkey registration in the main thread.
-        self.after(0, binding.set_new_hotkey, hotkey_combo)
+        self.after(0, binding.set_new_hotkey, hotkey_combo, False)
 
     def create_widgets(self):
         """
@@ -305,7 +340,7 @@ class UI(tk.Tk):
         canvas1.pack(side="left")
     
         self.text_field = tk.Text(main_frame, height=5, width=20)
-        
+        self.text_field.pack()
         
         self.preset_panels = []
         for i in range(5):
@@ -351,20 +386,23 @@ class UI(tk.Tk):
         bind_frame = tk.Frame(settings_window)
         for i in self.key_bindings.values():
             i.show(bind_frame)
-        close_button = tk.Button(settings_window, text="Close", command=settings_window.destroy)  
+        close_button = tk.Button(settings_window, text="Close", command=settings_window.destroy)
+        defaults_button = tk.Button(settings_window, text="Reset to Defaults", command=lambda: self.set_initial_keybindings(settings_window))  
         bind_frame.pack()
-        close_button.pack(pady="10", side="bottom")
+        defaults_button.pack(pady="10", side="bottom")
+        close_button.pack(pady="5", side="bottom")
+        
         
     def save_presets(self):
         output = {}
-        with open(self.save_file, 'w') as f:
+        with open(self.preset_save_file, 'w') as f:
             for i in range(len(self.preset_panels)):
                 output.update({i: self.preset_panels[i].text})
             json.dump(output, f)    
             
     def load_presets(self):
         input = {}
-        with open(self.save_file, 'r') as f:
+        with open(self.preset_save_file, 'r') as f:
             data = json.load(f)
             print('__data___')
             print(data)
