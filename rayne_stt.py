@@ -162,7 +162,7 @@ class Preset():
     def __init__(self, container, field, number: int):
         self.field = field
         self.number = number + 1
-        self.panel = tk.Canvas(container)
+        self.panel = tk.Frame(container)
         self.label = tk.Label(self.panel, text = f"Preset:{self.number}")
         self.label.pack(side="left")
         self.load_button = ttk.Button(self.panel, text=f"load {self.number}")
@@ -191,14 +191,14 @@ class Keybind():
         self.name = name
         
     def show(self, container):
-        self.frm = tk.Frame(container)
+        self.frm = tk.Frame(container, highlightbackground="black", highlightthickness=1)
         self.name_label = tk.Label(self.frm, text=self.name, width=20, anchor='w')
-        self.name_label.pack(side="left")
+        self.name_label.pack(side="left", padx=4, pady=2)
         self.change_button = ttk.Button(self.frm, text=self.combo, command=self.receive_key)
 
         self.change_button.pack(side="right", padx=20)
 
-        self.frm.pack()
+        self.frm.pack(pady=4)
         
     def receive_key(self): 
         if self.change_button:
@@ -234,7 +234,7 @@ class UI(tk.Tk):
         # Initialize the parent class (tk.Tk)
         super().__init__()
         
-        self.title('David\'s Audio Input Program')
+        self.title('Rayne STT')
         # --- Window Configuration ---
         # Set the minimum size of the window
         self.minsize(300, 200)
@@ -256,9 +256,11 @@ class UI(tk.Tk):
         self.key_bindings['insert3'] = Keybind("enter preset 3",'ctrl+shift+7', lambda: insert_field(2))
         self.key_bindings['insert4'] = Keybind("enter preset 4",'ctrl+shift+8', lambda: insert_field(3))
         self.key_bindings['insert5'] = Keybind("enter preset 5",'ctrl+shift+9', lambda: insert_field(4))
-        window.destroy()
+        if window:
+            window.destroy()
+            self.settings()
         self.save_keybindings_to_file()
-        self.settings()
+        self.set_entry_label()
         
     
     def save_keybindings_to_file(self): 
@@ -270,17 +272,21 @@ class UI(tk.Tk):
             json.dump(output, f)  
     
     def load_keybindings_from_file(self):
-        with open(self.bindings_save_file, 'r') as f:
-            data = json.load(f)
-        self.key_bindings['insert_current'] = Keybind("insert current text", data["insert current text"], insert_current)
-        self.key_bindings['start'] = Keybind("start recording", data["start recording"], lambda: start_recording(ui.audio_device))
-        self.key_bindings['stop'] = Keybind("stop recording", data["stop recording"], stop_recording)
-        self.key_bindings['insert1'] = Keybind("enter preset 1",data["enter preset 1"], lambda: insert_field(0))
-        self.key_bindings['insert2'] = Keybind("enter preset 2",data["enter preset 2"], lambda: insert_field(1))
-        self.key_bindings['insert3'] = Keybind("enter preset 3",data["enter preset 3"], lambda: insert_field(2))
-        self.key_bindings['insert4'] = Keybind("enter preset 4",data["enter preset 4"], lambda: insert_field(3))
-        self.key_bindings['insert5'] = Keybind("enter preset 5",data["enter preset 5"], lambda: insert_field(4))
-               
+        try: 
+            with open(self.bindings_save_file, 'r') as f:
+                data = json.load(f)
+            self.key_bindings['insert_current'] = Keybind("insert current text", data["insert current text"], insert_current)
+            self.key_bindings['start'] = Keybind("start recording", data["start recording"], lambda: start_recording(ui.audio_device))
+            self.key_bindings['stop'] = Keybind("stop recording", data["stop recording"], stop_recording)
+            self.key_bindings['insert1'] = Keybind("enter preset 1",data["enter preset 1"], lambda: insert_field(0))
+            self.key_bindings['insert2'] = Keybind("enter preset 2",data["enter preset 2"], lambda: insert_field(1))
+            self.key_bindings['insert3'] = Keybind("enter preset 3",data["enter preset 3"], lambda: insert_field(2))
+            self.key_bindings['insert4'] = Keybind("enter preset 4",data["enter preset 4"], lambda: insert_field(3))
+            self.key_bindings['insert5'] = Keybind("enter preset 5",data["enter preset 5"], lambda: insert_field(4))
+        except FileNotFoundError:
+            self.set_initial_keybindings(None)
+        self.set_entry_label()
+
         
     def listen_for_hotkey(self, binding):
         """(Runs in a separate thread)
@@ -292,24 +298,27 @@ class UI(tk.Tk):
         # Safely schedule the GUI update and hotkey registration in the main thread.
         self.after(0, binding.set_new_hotkey, hotkey_combo, False)
 
+    def set_entry_label(self):
+        self.text_field_bottom_label.configure(text=f"Click in box to edit. Press {self.key_bindings['insert_current'].combo} to type in focused window or {self.key_bindings['start'].combo} to record new.")
+        
     def create_widgets(self):
         """
         This method is responsible for creating and arranging all the widgets
         in the main window.
         """
-        # Create a frame to hold the content.
-        # Using a frame is good practice for organizing widgets.
+
+        #main content frame
         main_frame = ttk.Frame(self, padding="20")
         main_frame.pack(expand=True)
 
-        # Create a label widget
-        welcome_label = ttk.Label(
+        #name_label
+        main_name_label = ttk.Label(
             main_frame,
-            text="David's Audio Input Program",
+            text="Rayne STT",
             font=("Bahnschrift", 16, "bold")
         )
-        # The pack() geometry manager places the widget in the window.
-        welcome_label.pack(pady=10) # pady adds vertical padding
+    
+        main_name_label.pack(pady=10) 
         
         self.start_string = tk.StringVar()
         self.start_string.set("default")
@@ -319,35 +328,41 @@ class UI(tk.Tk):
         source.pack()
         settings =  ("default", "A", "B", "C")
         self.ddmenu = ttk.Combobox(source_panel, textvariable = self.start_string, values = settings, state="readonly")
-        #ddmenu.current(0)
         self.ddmenu.pack(side="left")
         self.ddmenu.bind("<<ComboboxSelected>>", self.on_selected)
         source_panel.pack()
         
-        my_frame = ttk.Frame(main_frame)
-        my_frame.pack() # Or use .grid() or .place() to position the frame
+        self.preset_frame = ttk.Frame(main_frame)
+        self.preset_frame.pack(pady=14)
 
         # Add widgets to the frame
-        label = tk.Label(my_frame, text="Presets")
+        label = tk.Label(self.preset_frame, text="Presets")
         label.pack(side="top", pady=5) 
-        canvas1 = tk.Canvas(my_frame, background='gray75', width=300)
+        #canvas1 = tk.Canvas(preset_frame)
         
-        scrollbar1 = ttk.Scrollbar(my_frame, orient='vertical', command=canvas1.yview)
-        canvas1.configure(yscrollcommand=scrollbar1.set)
-        scrollable_frame = ttk.Frame(canvas1)
+        #scrollbar1 = ttk.Scrollbar(preset_frame, orient='vertical', command=canvas1.yview)
+        #canvas1.configure(yscrollcommand=scrollbar1.set)
+        #scrollable_frame = ttk.Frame(canvas1)
         
-        scrollbar1.pack(side="right", fill="y")
-        canvas1.pack(side="left")
-    
-        self.text_field = tk.Text(main_frame, height=5, width=20)
-        self.text_field.pack()
+        #scrollbar1.pack(side="right", fill="y")
+        #canvas1.pack(side="left")
+        self.entry_frame = tk.Frame(main_frame)
+        self.text_field_top_label = tk.Label(self.entry_frame, text=f"Current text:")
+        self.text_field_bottom_label = tk.Label(self.entry_frame, wraplength=250)
+        self.text_field = tk.Text(self.entry_frame, height=5, width=40)
+        self.entry_frame.pack(side="bottom", pady=8)
+        self.text_field_top_label.pack(pady=8, side="top")
+        self.text_field_bottom_label.pack(pady=8, side="bottom")
+        self.text_field.pack(pady=8, side="bottom")
         
-        self.preset_panels = []
+        self.preset_panels = [] 
         for i in range(5):
-            self.preset_panels.insert(len(self.preset_panels), Preset(scrollable_frame, self.text_field, i))
+            self.preset_panels.insert(len(self.preset_panels), Preset(self.preset_frame, self.text_field, i))
         for i in range(len(self.preset_panels)):
-            self.preset_panels[i].panel.pack()
-        
+            self.preset_panels[i].panel.pack(padx=5)
+        padding_label = tk.Label(self.preset_frame)
+        padding_label.pack()
+        self.preset_frame.configure(relief=tk.GROOVE)
         menu_bar = tk.Menu(main_frame)
         self.config(menu=menu_bar)
         
@@ -360,7 +375,7 @@ class UI(tk.Tk):
         file_list.add_command(label="Placeholder", command=test_print)
         edit_list.add_command(label="Settings", command=self.settings)
             
-        #testlabel = tk.Label(my_frame, text="test label")
+        #testlabel = tk.Label(preset_frame, text="test label")
         #testlabel.pack()
 
             
@@ -372,14 +387,14 @@ class UI(tk.Tk):
         #     label.pack()
         #     preset_panels[i].pack()
             
-        canvas1.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        #canvas1.create_window((0, 0), window=scrollable_frame, anchor="nw")
         
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas1.configure(
-            scrollregion=canvas1.bbox("all")
-            )
-        )
+        # scrollable_frame.bind(
+        #     "<Configure>",
+        #     lambda e: canvas1.configure(
+        #     scrollregion=canvas1.bbox("all")
+        #     )
+        # )
     def settings(self):
         settings_window = tk.Toplevel(self)
         settings_window.title("Settings")
@@ -388,9 +403,9 @@ class UI(tk.Tk):
             i.show(bind_frame)
         close_button = tk.Button(settings_window, text="Close", command=settings_window.destroy)
         defaults_button = tk.Button(settings_window, text="Reset to Defaults", command=lambda: self.set_initial_keybindings(settings_window))  
-        bind_frame.pack()
-        defaults_button.pack(pady="10", side="bottom")
-        close_button.pack(pady="5", side="bottom")
+        bind_frame.pack(pady=12, padx=12)
+        defaults_button.pack(pady=10, side="bottom")
+        close_button.pack(pady=5, side="bottom")
         
         
     def save_presets(self):
@@ -402,13 +417,15 @@ class UI(tk.Tk):
             
     def load_presets(self):
         input = {}
-        with open(self.preset_save_file, 'r') as f:
-            data = json.load(f)
-            print('__data___')
-            print(data)
-        for i in range(len(self.preset_panels)):
-            self.preset_panels[i].text = data[str(i)]
-          
+        try:
+            with open(self.preset_save_file, 'r') as f:
+                data = json.load(f)
+                print('__data___')
+                print(data)
+            for i in range(len(self.preset_panels)):
+                self.preset_panels[i].text = data[str(i)]
+        except FileNotFoundError:
+            pass    
         
     def on_selected(self, event):
         print(f"Selected value is: {self.ddmenu.get()}")
