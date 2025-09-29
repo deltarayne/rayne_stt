@@ -9,6 +9,7 @@ import tkinter as tk
 from tkinter import ttk
 import json
 import time 
+import webbrowser
 
 
 
@@ -368,17 +369,42 @@ class UI(tk.Tk):
         
         file_list = tk.Menu(menu_bar, tearoff=0)
         edit_list = tk.Menu(menu_bar, tearoff=0)
-        about_list = tk.Menu(menu_bar, tearoff=0)
+        help_list = tk.Menu(menu_bar, tearoff=0)
         menu_bar.add_cascade(label="File", menu=file_list)
         menu_bar.add_cascade(label="Edit", menu=edit_list)
-        menu_bar.add_cascade(label="Help", menu=about_list)
-        file_list.add_command(label="Placeholder", command=test_print)
-        edit_list.add_command(label="Settings", command=self.settings)
+        menu_bar.add_cascade(label="Help", menu=help_list)
+        file_list.add_command(label="Quit", command=self.destroy)
+        edit_list.add_command(label="Keybindings...", command=self.settings)
+        edit_list.add_separator()
+        edit_list.add_command(label="Copy", command=self.copy_to_clipboard)
+        edit_list.add_command(label="Paste", command=self.paste_from_clipboard)
+        help_list.add_command(label="Help", command=lambda:webbrowser.open_new_tab("https://github.com/deltarayne/rayne_stt"))
+        help_list.add_command(label="About", command=self.about)
             
         #testlabel = tk.Label(preset_frame, text="test label")
         #testlabel.pack()
+    def copy_to_clipboard(self):
+        self.clipboard_clear()
+        self.clipboard_append(self.text_field.get("1.0", tk.END))
+    
+    def paste_from_clipboard(self):
+        text = self.clipboard_get() 
+        self.text_field.delete("1.0", tk.END)
+        self.text_field.insert("1.0", text)
 
-            
+    def about(self):
+        about_window = tk.Toplevel(self)
+        about_button_frame= tk.Frame(about_window)
+        about_window.title("About")
+        about_name_label = tk.Label(about_window, text="Rayne STT by Miranda R.", font=("Bahnschrift", 16, "bold"))
+        about_info_label = tk.Label(about_window, text="This software uses OpenAI's Whisper V3 model for speech recognition and is distributed at no cost, under the terms of the GPL. (Full license text and details available in ReadMe)", wraplength=300)
+        about_name_label.pack(pady=16, padx=20)
+        about_info_label.pack(pady=16, padx=20)
+        about_github_button = ttk.Button(about_button_frame, text="Github", command=lambda: webbrowser.open_new_tab("https://github.com/deltarayne/rayne_stt"))
+        about_close_button = ttk.Button(about_button_frame, text="Close", command=about_window.destroy) 
+        about_github_button.pack(pady=4)
+        about_close_button.pack(pady=4)
+        about_button_frame.pack(pady=16)
         #     label = tk.Label(preset_panels[i], text=f"hello{i}")
         #     save_button = ttk.Button(preset_panels[i], text="save")
         #     use_button = ttk.Button(preset_panels[i], text="use")
@@ -406,8 +432,7 @@ class UI(tk.Tk):
         bind_frame.pack(pady=12, padx=12)
         defaults_button.pack(pady=10, side="bottom")
         close_button.pack(pady=5, side="bottom")
-        
-        
+            
     def save_presets(self):
         output = {}
         with open(self.preset_save_file, 'w') as f:
@@ -441,11 +466,11 @@ class UI(tk.Tk):
     def set_audio_device(self, device):
         print(f"setting audio device to {device}")
         self.audio_device = device
-        start_key = 'ctrl+shift+1'
-        stop_key = 'ctrl+shift+2'
-        keyboard.remove_all_hotkeys()
-        keyboard.add_hotkey(start_key, start_recording, (ui.audio_device,))
-        keyboard.add_hotkey(stop_key, stop_recording)
+        # start_key = 'ctrl+shift+1'
+        # stop_key = 'ctrl+shift+2'
+        # keyboard.remove_all_hotkeys()
+        # keyboard.add_hotkey(start_key, start_recording, (ui.audio_device,))
+        # keyboard.add_hotkey(stop_key, stop_recording)
         
     def populate_device_menu(self, devices: list[dict]):
         names = []
