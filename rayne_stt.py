@@ -13,21 +13,19 @@ import webbrowser
 
 
 
-# --- Configuration ---
+
 # The recording sample rate must match what the Whisper model was trained on.
 RATE = 16000
-# Use a smaller chunk size for lower latency.
+# smaller chunk size for lower latency.
 CHUNK_SIZE = 1024
 # Set device for PyTorch    
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 TORCH_DTYPE = torch.float16 if torch.cuda.is_available() else torch.float32
 audio_input_device = sd.default.device
-# --- State Management for Recording ---
-# These global variables will manage the recording state across different threads.
+# state management
 is_recording = False
 audio_data = []
 GUI_DEBUG = False
-# --- Model and Pipeline Setup ---
 if GUI_DEBUG == False:
     print("Loading the Whisper model. This may take a moment...")
     model_id = "openai/whisper-large-v3"
@@ -60,10 +58,7 @@ if GUI_DEBUG == False:
         exit()
 
 def record_audio(device_index):
-    """
-    This function is run in a separate thread. It continuously reads from the
-    audio stream and adds the data to our `audio_data` list.
-    """
+
     global is_recording, audio_data
     
     device_id = 2
@@ -79,10 +74,6 @@ def record_audio(device_index):
             audio_data.append(chunk)
             
 def transcribe_audio():
-    """
-    This function takes the recorded audio data, processes it, and
-    runs it through the transcription pipeline.
-    """
     global audio_data
     print("Recording stopped. Preparing for transcription...")
 
@@ -92,7 +83,7 @@ def transcribe_audio():
 
     # Concatenate all the recorded chunks into a single NumPy array.
     full_audio = np.concatenate(audio_data, axis=0)
-    # The pipeline expects a 1D array, so we squeeze the channel dimension.
+    # pipeline expects a 1D array, so we squeeze the channel dimension.
     audio_input_squeezed = full_audio.squeeze()
 
     print("Transcribing... This may take a moment.")
@@ -125,10 +116,6 @@ def insert_current():
     insert_text(captured_text)
 
 def start_recording(device_index):
-    """
-    Callback function for the 'start' hotkey.
-    It sets the recording flag and starts the recording thread.
-    """
     global is_recording
     if is_recording:
         print("Already recording.")
@@ -138,11 +125,8 @@ def start_recording(device_index):
     # Start the recording in a separate thread to keep the main thread responsive.
     threading.Thread(target=record_audio, args=(device_index,), daemon=True).start()
 
+#stops the recording and starts the transcription process
 def stop_recording():
-    """
-    Callback function for the 'stop' hotkey.
-    It clears the recording flag and starts the transcription process.
-    """
     global is_recording
     if not is_recording:
         return
@@ -219,13 +203,9 @@ class Keybind():
             ui.save_keybindings_to_file()
             
 
-
+#main application window
 class UI(tk.Tk):
-    """
-    Main application window for the Tkinter program.
-    This class inherits from tk.Tk to get all the features of a standard window.
-    """
-    
+
     key_bindings = {}
     
     preset_save_file = "presets.json"
@@ -290,9 +270,6 @@ class UI(tk.Tk):
 
         
     def listen_for_hotkey(self, binding):
-        """(Runs in a separate thread)
-        Waits for a key combination and schedules the update in the main thread.
-        """
         # This is a blocking call; it will wait here until a hotkey is entered.
         hotkey_combo = keyboard.read_hotkey(suppress=False)
         
@@ -302,12 +279,8 @@ class UI(tk.Tk):
     def set_entry_label(self):
         self.text_field_bottom_label.configure(text=f"Click in box to edit. Press {self.key_bindings['insert_current'].combo} to type in focused window or {self.key_bindings['start'].combo} to record new.")
         
+    #assembles the main window
     def create_widgets(self):
-        """
-        This method is responsible for creating and arranging all the widgets
-        in the main window.
-        """
-
         #main content frame
         main_frame = ttk.Frame(self, padding="20")
         main_frame.pack(expand=True)
@@ -339,14 +312,7 @@ class UI(tk.Tk):
         # Add widgets to the frame
         label = tk.Label(self.preset_frame, text="Presets")
         label.pack(side="top", pady=5) 
-        #canvas1 = tk.Canvas(preset_frame)
-        
-        #scrollbar1 = ttk.Scrollbar(preset_frame, orient='vertical', command=canvas1.yview)
-        #canvas1.configure(yscrollcommand=scrollbar1.set)
-        #scrollable_frame = ttk.Frame(canvas1)
-        
-        #scrollbar1.pack(side="right", fill="y")
-        #canvas1.pack(side="left")
+
         self.entry_frame = tk.Frame(main_frame)
         self.text_field_top_label = tk.Label(self.entry_frame, text=f"Current text:")
         self.text_field_bottom_label = tk.Label(self.entry_frame, wraplength=250)
@@ -381,8 +347,6 @@ class UI(tk.Tk):
         help_list.add_command(label="Help", command=lambda:webbrowser.open_new_tab("https://github.com/deltarayne/rayne_stt"))
         help_list.add_command(label="About", command=self.about)
             
-        #testlabel = tk.Label(preset_frame, text="test label")
-        #testlabel.pack()
     def copy_to_clipboard(self):
         self.clipboard_clear()
         self.clipboard_append(self.text_field.get("1.0", tk.END))
@@ -405,22 +369,7 @@ class UI(tk.Tk):
         about_github_button.pack(pady=4)
         about_close_button.pack(pady=4)
         about_button_frame.pack(pady=16)
-        #     label = tk.Label(preset_panels[i], text=f"hello{i}")
-        #     save_button = ttk.Button(preset_panels[i], text="save")
-        #     use_button = ttk.Button(preset_panels[i], text="use")
-        #     save_button.pack(side="right")
-        #     use_button.pack(side="right")
-        #     label.pack()
-        #     preset_panels[i].pack()
-            
-        #canvas1.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        
-        # scrollable_frame.bind(
-        #     "<Configure>",
-        #     lambda e: canvas1.configure(
-        #     scrollregion=canvas1.bbox("all")
-        #     )
-        # )
+     
     def settings(self):
         settings_window = tk.Toplevel(self)
         settings_window.title("Settings")
@@ -462,15 +411,10 @@ class UI(tk.Tk):
         self.set_audio_device(target_index)
      
         
-    # --- Event Handlers ---
+    # event handlers
     def set_audio_device(self, device):
         print(f"setting audio device to {device}")
         self.audio_device = device
-        # start_key = 'ctrl+shift+1'
-        # stop_key = 'ctrl+shift+2'
-        # keyboard.remove_all_hotkeys()
-        # keyboard.add_hotkey(start_key, start_recording, (ui.audio_device,))
-        # keyboard.add_hotkey(stop_key, stop_recording)
         
     def populate_device_menu(self, devices: list[dict]):
         names = []
@@ -490,54 +434,12 @@ class UI(tk.Tk):
     
         
 if __name__ == "__main__":
-        
-    # --- Hotkey Setup ---
-    # The `keyboard` library runs callbacks in their own threads, which is perfect
-    # for our start/stop logic without blocking the main script.
-    start_key = 'ctrl+shift+1'
-    stop_key = 'ctrl+shift+2'
-    insert_current_text = 'ctrl+shift+3'
-    insert1 = 'ctrl+shift+5'
-    insert2 = 'ctrl+shift+6'
-    insert3 = 'ctrl+shift+7'
-    insert4 = 'ctrl+shift+8'
-    insert5 = 'ctrl+shift+9'
-
-
-
-    # Keep the script alive to listen for hotkeys.
-    #keyboard.wait('esc')
-
+    
     # run the main loop with tkinter
     ui = UI()
     dlist = sd.query_devices()
     ui.populate_device_menu(dlist)
 
-    
-    # start_hotkey = keyboard.add_hotkey(start_key, start_recording, (ui.audio_device,))
-    # stop_hotkey = keyboard.add_hotkey(stop_key, stop_recording)
-    # insert_current_hotkey = keyboard.add_hotkey(insert_current_text, insert_current)
-    # insert1_hotkey = keyboard.add_hotkey(insert1, insert_field, args=(0,))
-    # insert2_hotkey = keyboard.add_hotkey(insert2, insert_field, args=(1,))
-    # insert3_hotkey = keyboard.add_hotkey(insert3, insert_field, args=(2,))
-    # insert4_hotkey = keyboard.add_hotkey(insert4, insert_field, args=(3,))
-    # insert5_hotkey = keyboard.add_hotkey(insert5, insert_field, args=(4,))
-
-    # global_hotkeys = {
-    #     'start' : start_hotkey,
-    #     'stop' : stop_hotkey,
-    #     'insert_current' : insert_current_hotkey,
-    #     'insert1' : insert1_hotkey, 
-    #     'insert2' : insert2_hotkey, 
-    #     'insert3' : insert3_hotkey, 
-    #     'insert4' : insert4_hotkey,
-    #     'insert5' : insert5_hotkey
-    # }
-    
-    # ui.hotkeys = global_hotkeys
-
-    print(f"Press '{start_key}' to start recording.")
-    print("Press 'Esc' to exit the program.")
     ui.mainloop()
 
     # --- Cleanup ---
