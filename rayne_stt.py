@@ -13,6 +13,7 @@ import webbrowser
 
 
 
+
 # --- Configuration ---
 # The recording sample rate must match what the Whisper model was trained on.
 RATE = 16000
@@ -112,7 +113,7 @@ def transcribe_audio():
 
 def insert_text(text):
     time.sleep(2)
-    pyautogui.write(text, interval=0.1)  # Adjust the interval as needed for typing speed
+    pyautogui.write(text, interval=0.05)  # Adjust the interval as needed for typing speed
     ui.text_field.delete("1.0", tk.END)
     ui.text_field.insert("1.0", text)
 
@@ -120,9 +121,10 @@ def insert_field(target: int):
     insert_text(ui.preset_panels[target].text.rstrip())
 
 def insert_current():
-    captured_text = ui.text_field.get("1.0", tk.END)
+    captured_text = ui.text_field.get("1.0", tk.END).rstrip()
     print(f"about to insert {captured_text}")
-    insert_text(captured_text)
+    threading.Thread(target=insert_text, args=(captured_text,), daemon=True).start()
+
 
 def start_recording(device_index):
     """
